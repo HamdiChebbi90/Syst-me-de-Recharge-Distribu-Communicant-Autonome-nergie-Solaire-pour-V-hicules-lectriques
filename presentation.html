@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Système de Recharge EV Solaire — Version Finale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script>
+MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']]},options:{skipHtmlTags:['script','noscript','style','textarea','pre']}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+:root{
+  --bg:#F7F5F0;--bgs:#F0EDE6;--bgc:#FFFFFF;--bgca:#FAF9F6;
+  --tx:#1C1A16;--txm:#6B665C;--txd:#A09A90;--txf:#C8C3B8;
+  --sol:#c40808;--sold:#9E6D00;--solg:rgba(196,136,8,0.10);
+  --ev:#00058a;--evd:#006650;--evg:rgba(0,138,110,0.08);
+  --red:#D42B2B;--grn:#18803E;--wrn:#D95E08;
+  --bd:#E3E0D8;--bdl:#D2CEC5;
+  --sh:0 1px 4px rgba(0,0,0,0.06);
+  --r:10px;--rs:6px;
+  --fh:'Space Grotesk',sans-serif;--fb:'DM Sans',sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:var(--fb);-webkit-font-smoothing:antialiased}
+#pbar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--sol),var(--ev));z-index:1000;transition:width .4s cubic-bezier(.4,0,.2,1);border-radius:0 2px 2px 0}
+#sc{position:fixed;bottom:1.2rem;right:1.5rem;font-family:var(--fh);font-size:.72rem;color:var(--txd);z-index:999;background:var(--bgc);border:1px solid var(--bd);border-radius:20px;padding:.3rem .8rem;box-shadow:var(--sh)}
+#deck{width:100%;height:100vh;position:relative}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:2.2rem 3.5rem;opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .4s ease,transform .4s ease,visibility 0s .4s;overflow-y:auto}
+.slide.active{opacity:1;visibility:visible;transform:translateY(0);transition:opacity .4s ease,transform .4s ease,visibility 0s 0s}
+.si{width:100%;max-width:1150px;position:relative}
+.sec{font-family:var(--fh);font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--sol);margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem}
+.sec::after{content:'';flex:1;height:1px;background:var(--bd)}
+h1{font-family:var(--fh);font-weight:700;font-size:2.5rem;line-height:1.15;letter-spacing:-.02em;color:var(--tx)}
+h2{font-family:var(--fh);font-weight:600;font-size:1.75rem;line-height:1.2;margin-bottom:1.3rem;color:var(--tx)}
+h3{font-family:var(--fh);font-weight:600;font-size:1.05rem;margin-bottom:.55rem}
+p{color:var(--txm);line-height:1.7;font-size:.88rem}
+.ts{color:var(--sol)}.te{color:var(--ev)}.tr{color:var(--red)}.tg{color:var(--grn)}.tw{color:var(--wrn)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.1rem}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.85rem}
+.card{background:var(--bgc);border:1px solid var(--bd);border-radius:var(--r);padding:1.1rem 1.2rem;box-shadow:var(--sh);transition:box-shadow .3s,transform .2s}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08);transform:translateY(-1px)}
+.c-s{border-left:3px solid var(--sol)}.c-e{border-left:3px solid var(--ev)}.c-r{border-left:3px solid var(--red)}.c-g{border-left:3px solid var(--grn)}
+.ci{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.82rem;margin-bottom:.6rem}
+.ci.s{background:var(--solg);color:var(--sol)}.ci.e{background:var(--evg);color:var(--ev)}.ci.r{background:rgba(212,43,43,0.07);color:var(--red)}.ci.g{background:rgba(24,128,62,0.07);color:var(--grn)}
+.ct{font-family:var(--fh);font-weight:600;font-size:.86rem;margin-bottom:.25rem;color:var(--tx)}
+.cd{font-size:.78rem;color:var(--txm);line-height:1.5}
+.tag{display:inline-block;padding:.16rem .5rem;border-radius:4px;font-size:.68rem;font-weight:600;font-family:var(--fh);letter-spacing:.03em}
+.tag-s{background:var(--solg);color:var(--sol)}.tag-e{background:var(--evg);color:var(--ev)}.tag-r{background:rgba(212,43,43,0.07);color:var(--red)}
+.cb{background:#F5F3EE;border:1px solid var(--bd);border-radius:var(--r);padding:1rem 1.2rem;font-family:'Courier New',monospace;font-size:.72rem;line-height:1.6;color:#3A3730;overflow-x:auto;tab-size:2}
+.cb .kw{color:var(--sol);font-weight:700}.cb .fn{color:var(--ev);font-weight:600}.cb .cm{color:#A09A90;font-style:italic}.cb .str{color:#2E7D32}.cb .num{color:#C62828}
+.pt{width:100%;border-collapse:collapse}
+.pt th{text-align:left;font-family:var(--fh);font-weight:600;font-size:.72rem;color:var(--txd);padding:.4rem .6rem;border-bottom:1px solid var(--bd);text-transform:uppercase;letter-spacing:.05em}
+.pt td{padding:.45rem .6rem;border-bottom:1px solid var(--bd);font-size:.78rem;color:var(--txm)}
+.pt tr:last-child td{border-bottom:none}
+.pt .pn{font-family:'Courier New',monospace;color:var(--ev);font-weight:600}
+.fb{background:var(--bgs);border:1px solid var(--bd);border-radius:var(--r);padding:.9rem 1.2rem;margin-bottom:.6rem;overflow-x:auto}
+.fl{font-family:var(--fh);font-weight:600;font-size:.74rem;color:var(--sol);margin-bottom:.35rem}
+.chain{display:flex;align-items:center;justify-content:center;gap:0;padding:1.3rem 0;overflow-x:auto}
+.cs{width:40px;height:40px;border-radius:50%;background:var(--bgc);border:2px solid var(--bdl);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:600;font-size:.8rem;flex-shrink:0;box-shadow:var(--sh)}
+.cs.hl{border-color:var(--sol);box-shadow:0 0 0 3px var(--solg)}
+.ca{display:flex;flex-direction:column;align-items:center;width:50px;flex-shrink:0}
+.ca .at,.ca .ab{font-family:var(--fh);font-size:.68rem;font-weight:600;display:flex;align-items:center;gap:2px}
+.ca .at{color:var(--sol)}.ca .ab{color:var(--ev)}
+.ca .lv{width:1px;height:4px;background:var(--bdl);margin:1px 0}
+.cdots{font-family:var(--fh);color:var(--txf);font-size:1rem;letter-spacing:2px;padding:0 2px;flex-shrink:0}
+.declass{display:flex;align-items:center;justify-content:center;gap:0;padding:1rem 0;flex-wrap:nowrap}
+.ds{background:var(--bgc);border:1px solid var(--bd);border-radius:var(--r);padding:.75rem .9rem;text-align:center;min-width:95px;box-shadow:var(--sh)}
+.ds .dl{font-family:var(--fh);font-weight:600;font-size:.8rem}
+.ds .dd{font-size:.66rem;color:var(--txm);margin-top:.12rem}
+.ds.rej{border-color:var(--red)}.ds.rej .dl{color:var(--red)}
+.da{color:var(--txd);font-size:.85rem;margin:0 .3rem;flex-shrink:0}
+.qb{background:linear-gradient(135deg,var(--solg),var(--evg));border:1px solid var(--bdl);border-radius:var(--r);padding:1.2rem 1.6rem;margin-bottom:1.2rem;font-family:var(--fh);font-size:.95rem;font-weight:500;line-height:1.55;color:var(--tx)}
+.stm{text-align:center}.stm h1{font-size:2.3rem;margin-bottom:.7rem}
+.stm .sub{font-size:1rem;color:var(--txm);margin-bottom:1.6rem;font-weight:300}
+.stm .meta{display:flex;gap:1.6rem;justify-content:center;font-size:.78rem;color:var(--txd);flex-wrap:wrap}
+.stm .meta span{display:flex;align-items:center;gap:.3rem}
+.al{width:70px;height:3px;margin:1.1rem auto;background:linear-gradient(90deg,var(--sol),var(--ev));border-radius:2px}
+.pi{display:flex;align-items:center;gap:.85rem;padding:.6rem 0;border-bottom:1px solid var(--bd)}
+.pi:last-child{border-bottom:none}
+.pn2{width:28px;height:28px;border-radius:6px;background:var(--solg);color:var(--sol);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:700;font-size:.75rem;flex-shrink:0}
+.ptx{font-family:var(--fh);font-weight:500;font-size:.88rem}
+.cmp{width:100%;border-collapse:collapse;font-size:.75rem}
+.cmp th{font-family:var(--fh);font-weight:600;padding:.5rem .6rem;text-align:left;border-bottom:2px solid var(--bd);font-size:.73rem;vertical-align:top}
+.cmp th:nth-child(2){color:var(--red)}.cmp th:nth-child(3){color:var(--grn)}
+.cmp td{padding:.5rem .6rem;border-bottom:1px solid var(--bd);color:var(--txm);vertical-align:top;line-height:1.4}
+.cmp tr:last-child td{border-bottom:none}
+.cmp .bad{color:var(--red);font-weight:500}.cmp .good{color:var(--grn);font-weight:500}.cmp .mid{color:var(--wrn);font-weight:500}
+.sim-panel{background:var(--bgc);border:1px solid var(--bd);border-radius:var(--r);padding:1.1rem 1.2rem;margin-bottom:.9rem;box-shadow:var(--sh)}
+.sim-grid{display:grid;grid-template-columns:260px 1fr;gap:1.1rem}
+.sim-params{display:flex;flex-direction:column;gap:.55rem}
+.sim-row{display:flex;align-items:center;justify-content:space-between;gap:.4rem}
+.sim-lbl{font-size:.73rem;color:var(--txm);font-family:var(--fh);font-weight:500;white-space:nowrap}
+.sim-inp{width:65px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:.28rem .4rem;color:var(--tx);font-family:var(--fh);font-size:.76rem;text-align:right;outline:none;transition:border-color .2s}
+.sim-inp:focus{border-color:var(--sol)}
+.sim-toggle{position:relative;width:34px;height:18px;cursor:pointer;flex-shrink:0}
+.sim-toggle input{opacity:0;width:0;height:0}
+.sim-toggle .sl{position:absolute;inset:0;background:var(--bgs);border:1px solid var(--bd);border-radius:9px;transition:.3s}
+.sim-toggle .sl::before{content:'';position:absolute;width:12px;height:12px;left:2px;bottom:2px;background:var(--txf);border-radius:50%;transition:.3s}
+.sim-toggle input:checked+.sl{background:var(--solg);border-color:var(--sol)}
+.sim-toggle input:checked+.sl::before{transform:translateX(16px);background:var(--sol)}
+.sim-btn{background:var(--sol);color:#fff;border:none;padding:.55rem 1.2rem;border-radius:var(--rs);font-family:var(--fh);font-weight:600;font-size:.82rem;cursor:pointer;transition:opacity .2s,transform .1s;width:100%;margin-top:.25rem}
+.sim-btn:hover{opacity:.9}.sim-btn:active{transform:scale(.98)}
+.sim-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.sim-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.9rem}
+.sim-metric{background:var(--bgc);border:1px solid var(--bd);border-radius:var(--r);padding:.6rem .7rem;text-align:center;box-shadow:var(--sh)}
+.sim-metric .mv{font-family:var(--fh);font-weight:700;font-size:1.2rem}
+.sim-metric .ml{font-size:.66rem;color:var(--txm);font-family:var(--fh);margin-top:.1rem}
+.sim-charts{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.sim-chart{background:var(--bgc);border:1px solid var(--bd);border-radius:var(--r);padding:.7rem;box-shadow:var(--sh)}
+.sim-chart canvas{width:100%!important;height:190px!important}
+.sim-chart-title{font-family:var(--fh);font-weight:600;font-size:.73rem;color:var(--txm);margin-bottom:.4rem}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-top:1.2rem}
+.citem{display:flex;gap:.6rem;align-items:flex-start;padding:.85rem;background:var(--bgc);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh)}
+.citem .cii{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.85rem}
+.citem .cit h4{font-family:var(--fh);font-weight:600;font-size:.82rem;margin-bottom:.12rem}
+.citem .cit p{font-size:.73rem;line-height:1.4}
+.intro-highlights{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+.ih-item{display:flex;gap:.7rem;align-items:flex-start}
+.ih-num{font-family:var(--fh);font-weight:700;font-size:1.8rem;color:var(--sol);opacity:.25;line-height:1}
+.ih-text h4{font-family:var(--fh);font-weight:600;font-size:.88rem;margin-bottom:.15rem}
+.ih-text p{font-size:.78rem}
+.slide.active .au{animation:fu .5s ease both}
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        .slide.active .d1{animation-delay:.07s}.slide.active .d2{animation-delay:.14s}.slide.active .d3{animation-delay:.21s}.slide.active .d4{animation-delay:.28s}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){
+  .slide{padding:1.1rem 1.3rem}h1{font-size:1.6rem}h2{font-size:1.3rem}
+  .g2,.g3,.g4,.cgrid,.intro-highlights{grid-template-columns:1fr}
+  .sim-grid{grid-template-columns:1fr}.sim-metrics{grid-template-columns:1fr 1fr}
+  .sim-charts{grid-template-columns:1fr}.declass{flex-direction:column}.da{transform:rotate(90deg)}
+}
+@media(prefers-reduced-motion:reduce){.slide{transition:none}.slide.active .au{animation:none;opacity:1;transform:none}}
+
+</style>
+</head>
+<body>
+<div id="pbar" style="width:0%"></div>
+<div id="sc">1 / 16</div>
+<div id="deck">
+  <!-- add logo top right   -->
+ <div class="logo-container">
+        <img src="logo.jpg" alt="Logo" class="logo">
+    </div>
+<!-- S0: Titre -->
+<section class="slide active" data-s="0"><div class="si stm">
+  <div class="au"><div class="al"></div><h1>Système de Recharge Distribué<br>Communicant Autonome à Énergie Solaire<br>pour Véhicules Électriques</h1></div>
+  <div class="sub au d1">Algorithmes d'Admission et d'Allocation — Modèle M/M/C/N</div>
+  <div class="meta au d2">
+    <span><i class="fa-solid fa-graduation-cap"></i> Module IoT / Cloud / Big Data</span>
+    <span><i class="fa-solid fa-user"></i> M. Noureddine Ben Othman</span>
+    <span><i class="fa-solid fa-calendar"></i> 2025 — 2026</span>
+  </div>
+    <div class="sub au d1">Èlaborer par: </div> 
+
+  <div class="meta au d2"> <span><i class="fa-solid fa-user"></i> Houssem Eddine ROUACHED</span>
+    <span><i class="fa-solid fa-user"></i> Nasereddine SOMAALI</span>
+    <span><i class="fa-solid fa-user"></i> Mohamed RAHAL</span>
+    <span><i class="fa-solid fa-user"></i> Hamdi CHEBBI</span>
+    <span><i class="fa-solid fa-user"></i> Rihem TABOUBI</span>
+  
+
+
+    </div>
+
+</div></section>
+
+<!-- S1: Introduction -->
+<section class="slide" data-s="1"><div class="si">
+  <div class="sec au">Introduction</div>
+  <h2 class="au d1">Contexte & Objectifs du Projet</h2>
+  <p class="au d2" style="margin-bottom:1.2rem">La transition vers la mobilité électrique pose un défi majeur : les stations de recharge autonomes fonctionnant à l'énergie solaire sont limitées en puissance et en capacité de stockage. Sans un système de décision intelligent, les véhicules risquent d'être refusés, de subir des attentes excessives, ou de gaspiller l'énergie solaire disponible.</p>
+  <div class="intro-highlights au d3">
+    <div class="ih-item"><div class="ih-num">1</div><div class="ih-text"><h4>Concevoir un algorithme côté véhicule</h4><p>Permettre à chaque EV de sélectionner la station optimale en fonction de son état réel (SOC, SOH), de sa position et des conditions de trafic.</p></div></div>
+    <div class="ih-item"><div class="ih-num">2</div><div class="ih-text"><h4>Concevoir un algorithme côté station</h4><p>Contrôle d'admission (ACA) avec déclassification de la recharge et prédiction de l'énergie solaire pour maximiser le taux d'acceptation.</p></div></div>
+    <div class="ih-item"><div class="ih-num">3</div><div class="ih-text"><h4>Modéliser formellement le système</h4><td>File d'attente M/M/C/N avec chaîne de naissance-mort, formules analytiques de P_refus, L_q et W validées par simulation.</p></div></div>
+    <div class="ih-item"><div class="ih-num">4</div><div class="ih-text"><h4>Adresser sécurité et communication</h4><p>Authentification PKI, chiffrement, anti-rejeu, gestion des pertes de paquets et architecture distribuée V2I/I2I/Cloud.</p></div></div>
+  </div>
+</div></section>
+
+<!-- S2: Plan -->
+<section class="slide" data-s="2"><div class="si">
+  <div class="sec au">Sommaire</div>
+  <h2 class="au d1">Plan de la Présentation</h2>
+  <div class="au d2">
+    <div class="pi"><div class="pn2">1</div><div class="ptx">Définition du Problème</div></div>
+    <div class="pi"><div class="pn2">2</div><div class="ptx">Architecture du Système</div></div>
+    <div class="pi"><div class="pn2">3</div><div class="ptx">Paramètres d'Influence</div></div>
+    <div class="pi"><div class="pn2">4</div><div class="ptx">Modélisation M/M/C/N & Formules</div></div>
+    <div class="pi"><div class="pn2">5</div><div class="ptx">Algorithme Côté Véhicule</div></div>
+    <div class="pi"><div class="pn2">6</div><div class="ptx">Algorithme ACA + Déclassification</div></div>
+    <div class="pi"><div class="pn2">7</div><div class="ptx">Allocation Distribuée V2I / I2I / Cloud</div></div>
+    <div class="pi"><div class="pn2">8</div><div class="ptx">Sécurité & Communication</div></div>
+    <div class="pi"><div class="pn2">9</div><div class="ptx">Comparaison des Approches</div></div>
+    <div class="pi"><div class="pn2">10</div><div class="ptx">Simulation Interactive & Résultats</div></div>
+    <div class="pi"><div class="pn2">11</div><div class="ptx">Conclusion & Perspectives</div></div>
+  </div>
+</div></section>
+
+<!-- S3: Problème -->
+<section class="slide" data-s="3"><div class="si">
+  <div class="sec au">Partie 1 — Problématique</div>
+  <h2 class="au d1">Définition du Problème</h2>
+  <div class="qb au d2"><span class="ts">Q :</span> Quand plusieurs véhicules électriques veulent se recharger dans des stations solaires limitées en énergie et en prises, comment décider intelligemment <strong class="ts">QUI</strong> charger, <strong class="ts">OÙ</strong>, <strong class="ts">QUAND</strong>, à <strong class="ts">QUELLE PUISSANCE</strong> et avec quel niveau de <strong class="ts">SÉCURITÉ</strong> ?</div>
+  <div class="g4 au d3">
+    <div class="card c-s"><div class="ci s"><i class="fa-solid fa-car-side"></i></div><div class="ct">Sélection EV</div><div class="cd">Accepter / refuser selon SOC, SOH, priorité</div></div>
+    <div class="card c-e"><div class="ci e"><i class="fa-solid fa-bolt"></i></div><div class="ct">Type de Recharge</div><div class="cd">Lente / Normale / Rapide selon énergie</div></div>
+    <div class="card c-s"><div class="ci s"><i class="fa-solid fa-users-line"></i></div><div class="ct">File d'Attente</div><div class="cd">Temps estimé, capacité max N</div></div>
+    <div class="card c-e"><div class="ci e"><i class="fa-solid fa-sun"></i></div><div class="ct">Énergie Solaire</div><div class="cd">Disponibilité, stockage, variations</div></div>
+  </div>
+  <div class="g2 au d4" style="margin-top:1rem">
+    <div class="card c-r"><div class="ci r"><i class="fa-solid fa-shield-halved"></i></div><div class="ct">Sécurité</div><div class="cd">Faux véhicules, messages falsifiés, priorité frauduleuse, rejeu d'attaque, DoS</div></div>
+    <div class="card c-r"><div class="ci r"><i class="fa-solid fa-wifi"></i></div><div class="ct">Communication</div><div class="cd">Retard de message, perte de paquets, informations non à jour, déconnexion station</div></div>
+  </div>
+</div></section>
+
+<!-- S4: Architecture -->
+<section class="slide" data-s="4"><div class="si">
+  <div class="sec au">Partie 2 — Modélisation du Système</div>
+  <h2 class="au d1">Architecture du Système</h2>
+  <div style="display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;padding:.7rem 0" class="au d2">
+    <div class="card" style="border-color:var(--ev);text-align:center;min-width:120px;padding:.8rem .9rem">
+      <div style="font-size:1.4rem;margin-bottom:.25rem" class="te"><i class="fa-solid fa-car-side"></i></div>
+      <div style="font-family:var(--fh);font-weight:600;font-size:.8rem">Véhicule EV</div>
+      <div style="font-size:.66rem;color:var(--txm)">SOC, SOH, Priorité, GPS</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--txd);font-size:.63rem;font-family:var(--fh)">
+      <span class="te">V2I</span><i class="fa-solid fa-arrows-left-right te"></i><span>Wi-Fi/DSRC/5G</span>
+    </div>
+    <div style="background:var(--bgc);border:2px solid var(--sold);border-radius:var(--r);padding:.9rem;min-width:195px;box-shadow:0 0 0 4px var(--solg)">
+      <div style="font-family:var(--fh);font-weight:600;font-size:.88rem;color:var(--sol);margin-bottom:.35rem"><i class="fa-solid fa-charging-station"></i> Station</div>
+      <div style="font-size:.66rem;color:var(--txm);margin-bottom:.45rem">File M/M/C/N — ACA</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem">
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:.35rem;text-align:center;font-size:.66rem"><div class="te"><i class="fa-solid fa-plug"></i></div>M Prises</div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:.35rem;text-align:center;font-size:.66rem"><div class="tw"><i class="fa-solid fa-list-ol"></i></div>File (N max)</div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:.35rem;text-align:center;font-size:.66rem"><div class="ts"><i class="fa-solid fa-solar-panel"></i></div>PV + AC/DC</div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:.35rem;text-align:center;font-size:.66rem"><div class="ts"><i class="fa-solid fa-battery-full"></i></div>Stockage ESU</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--txd);font-size:.63rem;font-family:var(--fh)">
+      <span class="ts">I2I</span><i class="fa-solid fa-arrows-left-right ts"></i><span>Coordination</span>
+    </div>
+    <div class="card" style="border-color:var(--sol);text-align:center;min-width:120px;padding:.8rem .9rem">
+      <div style="font-size:1.4rem;margin-bottom:.25rem" class="ts"><i class="fa-solid fa-charging-station"></i></div>
+      <div style="font-family:var(--fh);font-weight:600;font-size:.8rem">Autres Stations</div>
+      <div style="font-size:.66rem;color:var(--txm)">Réseau distribué</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;color:var(--txd)"><i class="fa-solid fa-cloud" style="font-size:1rem"></i></div>
+    <div class="card" style="text-align:center;min-width:100px;padding:.8rem .9rem">
+      <div style="font-size:1.4rem;margin-bottom:.25rem;color:var(--txd)"><i class="fa-solid fa-cloud"></i></div>
+      <div style="font-family:var(--fh);font-weight:600;font-size:.8rem">Cloud</div>
+      <div style="font-size:.66rem;color:var(--txm)">Fallback global</div>
+    </div>
+  </div>
+  <p class="au d3" style="text-align:center;font-size:.78rem;margin-top:.3rem">
+    Communication <span class="te">V2I</span> directe → coordination <span class="ts">I2I</span> inter-stations → basculement <span style="color:var(--txd)">Cloud</span> en dernier recours
+  </p>
+</div></section>
+
+<!-- S5: Paramètres -->
+<section class="slide" data-s="5"><div class="si">
+  <div class="sec au">Partie 2 — Modélisation du Système</div>
+  <h2 class="au d1">Paramètres d'Influence</h2>
+  <div class="g3 au d2">
+    <div><div class="sl" style="font-family:var(--fh);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--txd);margin-bottom:.4rem"><i class="fa-solid fa-car"></i> Véhicule</div>
+      <table class="pt"><tr><td class="pn">SOC_in</td><td>Charge actuelle (%)</td></tr><tr><td class="pn">SOC_desired</td><td>Charge cible (%)</td></tr><tr><td class="pn">SOH</td><td>État de santé batterie</td></tr><tr><td class="pn">Priorité</td><td>Normale (0) / Urgente (1)</td></tr><tr><td class="pn">GPS</td><td>Position courante</td></tr></table>
+    </div>
+    <div><div class="sl" style="font-family:var(--fh);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--txd);margin-bottom:.4rem"><i class="fa-solid fa-charging-station"></i> Station / File</div>
+      <table class="pt"><tr><td class="pn">Q(t)</td><td>Taille de la file à t</td></tr><tr><td class="pn">N</td><td>Capacité max système</td></tr><tr><td class="pn">M (C)</td><td>Nombre de prises</td></tr><tr><td class="pn">λ</td><td>Taux d'arrivée (Poisson)</td></tr><tr><td class="pn">μ</td><td>Taux de service (exp.)</td></tr></table>
+    </div>
+    <div><div class="sl" style="font-family:var(--fh);font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--txd);margin-bottom:.4rem"><i class="fa-solid fa-sliders"></i> Énergie / Décision</div>
+      <table class="pt"><tr><td class="pn">E_solar(t)</td><td>Énergie solaire instantanée</td></tr><tr><td class="pn">E_stored</td><td>Énergie stockée (ESU)</td></tr><tr><td class="pn">E_req</td><td>Énergie demandée par EV</td></tr><tr><td class="pn">P_fast/norm/slow</td><td>Puissances de recharge</td></tr><tr><td class="pn">T_wait_max</td><td>Seuil d'attente max</td></tr></table>
+    </div>
+  </div>
+</div></section>
+
+<!-- S6: M/M/C/N -->
+<section class="slide" data-s="6"><div class="si">
+  <div class="sec au">Partie 2 — Modélisation du Système</div>
+  <h2 class="au d1">Modèle de File d'Attente — M/M/C/N</h2>
+  <div class="g2 au d2" style="margin-bottom:1rem">
+    <div>
+      <div class="sl">Notation de Kendall</div>
+      <div style="display:flex;gap:.5rem;align-items:center;margin:.6rem 0">
+        <span style="font-family:var(--fh);font-size:1.9rem;font-weight:700;letter-spacing:.04em"><span class="ts">M</span> / <span class="te">M</span> / <span class="tw">C</span> / <span class="tr">N</span></span>
+      </div>
+      <table class="pt">
+        <tr><td><span class="tag tag-s">M</span></td><td>Arrivées : Poisson (λ)</td></tr>
+        <tr><td><span class="tag tag-e">M</span></td><td>Service : Exponentielle (μ)</td></tr>
+        <tr><td><span class="tag tag-r">C</span></td><td>Serveurs : nombre de prises</td></tr>
+        <tr><td><span class="tag tag-r">N</span></td><td>Capacité : prises + file</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="sl">Pourquoi ce modèle ?</div>
+      <div class="card c-s" style="margin-bottom:.5rem"><div class="ct">Processus stochastique</div><div class="cd">Les arrivées EV sont aléatoires — le processus de Poisson modélise ce comportement de manière exacte.</div></div>
+      <div class="card c-e" style="margin-bottom:.5rem"><div class="ct">Propriété sans mémoire</div><div class="cd">La probabilité de finir le service ne dépend pas du temps déjà écoulé (distribution exponentielle).</div></div>
+      <div class="card c-r"><div class="ct">Capacité finie N → refus mesurable</div><div class="cd">Quand le système atteint N, tout nouvel arrivant est rejeté. P_N est la métrique clé du taux de perte.</div></div>
+    </div>
+  </div>
+  <div class="au d3" style="text-align:center;font-family:var(--fh);font-size:.8rem;color:var(--txm)">
+    Facteur d'utilisation : $\rho = \dfrac{\lambda}{C \cdot \mu}$ &nbsp;|&nbsp; Stabilité : $\rho < 1$   </div>
+</div></section>
+
+<!-- S7: Chaîne + Formules -->
+<section class="slide" data-s="7"><div class="si">
+  <div class="sec au">Partie 2 — Modélisation du Système</div>
+  <h2 class="au d1">Chaîne de Naissance-Mort & Formules</h2>
+  <div class="chain au d2">
+    <div class="cs">0</div><div class="ca"><div class="at">λ →</div><div class="lv"></div><div class="ab">← 0</div></div>
+    <div class="cs">1</div><div class="ca"><div class="at">λ →</div><div class="lv"></div><div class="ab">← μ</div></div>
+    <div class="cs">2</div><div class="ca"><div class="at">λ →</div><div class="lv"></div><div class="ab">← 2μ</div></div>
+    <div class="cdots">···</div>
+    <div class="cs hl">C</div><div class="ca"><div class="at">λ →</div><div class="lv"></div><div class="ab">← Cμ</div></div>
+    <div class="cdots">···</div>
+    <div class="cs" style="border-color:var(--red)">N</div>
+  </div>
+  <div class="g2 au d3" style="margin-top:.6rem">
+    <div>
+      <div class="fb"><div class="fl">Probabilité de l'état vide P₀</div>$$P_0 = \left[ \sum_{n=0}^{C} \frac{(C\rho)^n}{n!} + \frac{(C\rho)^C}{C!} \sum_{n=C+1}^{N} \rho^{\,n-C} \right]^{-1}$$</div>
+      <div class="fb"><div class="fl">Probabilité de refus P_N (taux de perte)</div>$$P_N = \frac{(C\rho)^C \cdot \rho^{\,N-C}}{C!} \cdot P_0$$</div>
+    </div>
+    <div>
+      <div class="fb"><div class="fl">Nombre moyen en file L_q</div>$$L_q = P_0 \cdot \frac{(C\rho)^C \cdot \rho}{C!\,(1-\rho)^2} \left[ 1 - \rho^{\,N-C} \right]$$</div>
+      <div class="fb"><div class="fl">Temps moyen d'attente W</div>$$W = \frac{L_q}{\lambda\,(1 - P_N)}$$</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- S8: Algo Véhicule -->
+<section class="slide" data-s="8"><div class="si">
+  <div class="sec au">Partie 3 — Algorithmes de Décision</div>
+  <h2 class="au d1">Algorithme Côté Véhicule — Sélection de Station</h2>
+  <div class="g2 au d2">
+    <div>
+      <div class="sl">Pseudo-code</div>
+      <div class="cb">
+<span class="kw">INPUT</span> : SOC, SOH, GPS_pos, T_wait_max
+<span class="kw">OUTPUT</span> : Station* choisie
+
+<span class="cm">// Capacité effective (SOH impacte la capacité)</span>
+C_eff = C_nominal × (SOH / 100)
+e_cur = C_eff × (SOC / 100)
+autonomy = e_cur × η_km_per_kWh
+
+<span class="cm">// Filtrer les stations atteignables</span>
+stations ← <span class="fn">getStationsInRange</span>(GPS, autonomy)
+
+<span class="cm">// Scorage multi-critères (coût à minimiser)</span>
+<span class="kw">for each</span> s <span class="kw">in</span> stations:
+  T_est ← s.waitTime + <span class="fn">rechargeTime</span>(SOC, SOH)
+  <span class="kw">if</span> T_est > T_wait_max: <span class="kw">skip</span>
+  score(s) ← w₁·d + w₂·T_est + w₃·Q(s)
+              − w₄·E_avail(s) − w₅·free(s)
+  <span class="kw">if</span> priority: score(s) −= bonus
+
+<span class="kw">return</span> <span class="fn">argmin</span>_s score(s)
+      </div>
+    </div>
+    <div>
+      <div class="sl">Points clés vs approche basique</div>
+      <div class="card c-e" style="margin-bottom:.45rem"><div class="ct"><i class="fa-solid fa-heart-pulse"></i>&nbsp; SOH dans le calcul</div><div class="cd">La capacité effective = C_nom × (SOH/100). Un SOH=75% réduit l'autonomie réelle de 25% par rapport au SOC affiché.</div></div>
+      <div class="card c-s" style="margin-bottom:.45rem"><div class="ct"><i class="fa-solid fa-road"></i>&nbsp; Vérification d'autonomie</div><div class="cd">Les stations hors de portée sont éliminées <em>avant</em> le scorage. Un véhicule à 15% avec SOH=70% ne peut pas viser une station à 10 km.</div></div>
+      <div class="card c-e" style="margin-bottom:.45rem"><div class="ct"><i class="fa-solid fa-clock"></i>&nbsp; Contrainte temporelle intégrée</div><div class="cd">Les stations dépassant T_wait_max sont exclues, pas pénalisées par un poids noyé dans la somme.</div></div>
+      <div class="card c-r"><div class="ct"><i class="fa-solid fa-triangle-exclamation"></i>&nbsp; Priorité ≠ simple poids</div><div class="cd">Bonus conséquent + traitement prioritaire en file (cf. ACA), pas un poids de 0.05 invisible dans le score total.</div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- S9: ACA -->
+<section class="slide" data-s="9"><div class="si">
+  <div class="sec au">Partie 3 — Algorithmes de Décision</div>
+  <h2 class="au d1">Algorithme ACA + Processus de Déclassification</h2>
+  <div class="declass au d2">
+    <div class="ds" style="border-color:var(--red)"><div class="dl tr">Rapide</div><div class="dd">P = 50 kW</div></div>
+    <div class="da"><i class="fa-solid fa-arrow-right"></i></div>
+    <div class="ds" style="border-color:var(--wrn)"><div class="dl tw">Normale</div><div class="dd">P = 22 kW</div></div>
+    <div class="da"><i class="fa-solid fa-arrow-right"></i></div>
+    <div class="ds" style="border-color:var(--sol)"><div class="dl ts">Lente</div><div class="dd">P = 3.7 kW</div></div>
+    <div class="da"><i class="fa-solid fa-arrow-right"></i></div>
+    <div class="ds" style="border-color:var(--ev)"><div class="dl te">Partielle</div><div class="dd">SOC → SOC_min</div></div>
+    <div class="da"><i class="fa-solid fa-arrow-right"></i></div>
+    <div class="ds rej"><div class="dl">Refus</div><div class="dd">Redirection</div></div>
+  </div>
+  <div class="g2 au d3">
+    <div>
+      <div class="sl">Pseudo-code ACA</div>
+      <div class="cb">
+<span class="kw">if</span> Q(t) >= N_max: <span class="kw">return</span> Refuser
+
+C_eff = C_nom × (SOH/100)
+E_req = C_eff × (SOC_des − SOC_in) / 100
+
+<span class="cm">// Prédiction solaire pendant la recharge</span>
+<span class="kw">for</span> rate <span class="kw">in</span> [Rapide, Normale, Lente]:
+  T_svc = E_req / P_rate
+  E_fut = <span class="fn">estSolar</span>(horloge, T_svc) + E_stored
+  T_wait = <span class="fn">estWait</span>(Q(t), rate)
+  <span class="kw">if</span> T_svc + T_wait ≤ T_wait_max
+     <span class="kw">and</span> E_fut ≥ E_req:
+    <span class="kw">return</span> (Accepter, rate)
+
+<span class="cm">// Recharge partielle vers SOC_min</span>
+E_part = C_eff × (SOC_min − SOC_in) / 100
+<span class="kw">if</span> E_part ≤ E_stored:
+  <span class="kw">return</span> (Partielle, Lente)
+
+<span class="kw">return</span> (Refuser/Rediriger)
+      </div>
+    </div>
+    <div>
+      <div class="sl">Ce que l'approche basique rate</div>
+      <div class="card c-r" style="margin-bottom:.45rem"><div class="ct"><i class="fa-solid fa-xmark"></i>&nbsp; Pas de déclassification</div><div class="cd">Accept/reject binaire. Un véhicule est refusé même si une recharge lente serait parfaitement faisable.</div></div>
+      <div class="card c-s" style="margin-bottom:.45rem"><div class="ct"><i class="fa-solid fa-xmark"></i>&nbsp; Pas de prédiction solaire</div><div class="cd">L'énergie est une valeur statique. Notre ACA estime la production solaire <em>pendant</em> la durée de recharge.</div></div>
+      <div class="card c-e" style="margin-bottom:.45rem"><div class="ct"><i class="fa-solid fa-xmark"></i>&nbsp; Pas de double contrainte</div><div class="cd">L'approche basique ne vérifie que l'énergie. Notre ACA vérifie <strong>temporelle</strong> ET <strong>énergétique</strong> simultanément.</div></div>
+      <div class="card c-r"><div class="ct"><i class="fa-solid fa-xmark"></i>&nbsp; Seuil partiel arbitraire</div><div class="cd">Le « 30% d'énergie » n'est relié à aucun SOC_min. Notre seuil est calculé pour atteindre une autre station.</div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- S10: Allocation -->
+<section class="slide" data-s="10"><div class="si">
+  <div class="sec au">Partie 3 — Algorithmes de Décision</div>
+  <h2 class="au d1">Allocation Distribuée V2I / I2I / Cloud</h2>
+  <div class="g2 au d2">
+    <div>
+      <div class="sl">Algorithme d'assignation</div>
+      <div class="cb">
+<span class="kw">INPUT</span> : EV_pos, SOC_in, SOH, T_wait_max
+<span class="kw">OUTPUT</span> : Adresse station
+
+d_max ← <span class="fn">autonomy</span>(SOC_in, SOH)
+
+<span class="cm">// Niveau 1 : V2I direct (~ms)</span>
+cands ← <span class="fn">queryLocal</span>(EV_pos, d_max)
+
+<span class="cm">// Niveau 2 : I2I voisin (~100ms)</span>
+<span class="kw">if</span> cands.isEmpty():
+  cands ← <span class="fn">queryNeighbors</span>()
+
+<span class="cm">// Niveau 3 : Cloud global (~1s)</span>
+<span class="kw">if</span> cands.isEmpty():
+  cands ← <span class="fn">queryCloud</span>()
+
+<span class="cm">// Sélection optimale</span>
+best ← <span class="fn">argmin</span>(α·wait + β·distance)
+<span class="fn">sendToEV</span>(best.address)
+<span class="fn">updateStatus</span>(best)
+      </div>
+    </div>
+    <div>
+      <div class="card c-e" style="margin-bottom:.45rem"><div class="ct"><span class="tag tag-e">V2I</span> Communication directe</div><div class="cd">Le véhicule contacte les stations dans son rayon d'autonomie. Temps : ~ms.</div></div>
+      <div class="card c-s" style="margin-bottom:.45rem"><div class="ct"><span class="tag tag-s">I2I</span> Coordination inter-stations</div><div class="cd">Si aucune station locale n'accepte, la station contacte ses voisines. Temps : ~100ms.</div></div>
+      <div class="card" style="margin-bottom:.45rem"><div class="ct"><span class="tag" style="background:var(--bgs);color:var(--txd)">Cloud</span> Fallback global</div><div class="cd">Dernier recours : requête au serveur central. Temps : ~1s.</div></div>
+      <div class="card c-r"><div class="ct"><i class="fa-solid fa-triangle-exclamation"></i>&nbsp; Tolérance aux pannes</div><div class="cd">Chaque niveau a un timeout. Échec V2I → I2I → Cloud → notification au véhicule.</div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- S11: Sécurité -->
+<section class="slide" data-s="11"><div class="si">
+  <div class="sec au">Partie 4 — Contraintes & Comparaison</div>
+  <h2 class="au d1">Sécurité & Communication</h2>
+  <div class="g2 au d2">
+    <div>
+      <div class="sl tr"><i class="fa-solid fa-shield-halved"></i> Menaces identifiées</div>
+      <div class="card c-r" style="margin-bottom:.35rem"><div class="ct">Faux véhicules</div><div class="cd">Identité falsifiée pour obtenir une recharge</div></div>
+      <div class="card c-r" style="margin-bottom:.35rem"><div class="ct">Injection de paquets</div><div class="cd">Modifier SOC, SOH ou priorité dans la requête</div></div>
+      <div class="card c-r" style="margin-bottom:.35rem"><div class="ct">Rejeu d'attaque (Replay)</div><div class="cd">Réémettre une requête valide d'un véhicule précédent</div></div>
+      <div class="card c-r" style="margin-bottom:.35rem"><div class="ct">Déni de service (DoS)</div><div class="cd">Saturer la file avec des requêtes malveillantes</div></div>
+      <div class="card c-r"><div class="ct">Élévation frauduleuse de priorité</div><div class="cd">Modifier le champ priorité pour passer devant</div></div>
+    </div>
+    <div>
+      <div class="sl tg"><i class="fa-solid fa-lock"></i> Contre-mesures</div>
+      <div class="card c-g" style="margin-bottom:.35rem"><div class="ct">Authentification PKI / V2G</div><div class="cd">Certificat numérique signé par une autorité de confiance</div></div>
+      <div class="card c-g" style="margin-bottom:.35rem"><div class="ct">Chiffrement TLS / AES</div><div class="cd">Tous les échanges V2I chiffrés de bout en bout</div></div>
+      <div class="card c-g" style="margin-bottom:.35rem"><div class="ct">Signature + Nonce (anti-rejeu)</div><div class="cd">Chaque requête signée avec timestamp/nonce unique</div></div>
+      <div class="card c-g" style="margin-bottom:.35rem"><div class="ct">Timeout & Retransmission</div><div class="cd">Gestion des pertes avec backoff exponentiel</div></div>
+      <div class="card c-g"><div class="ct">Consensus distribué I2I</div><div class="cd">Vérification croisée pour détecter les incohérences</div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- S12: Comparaison -->
+<section class="slide" data-s="12"><div class="si">
+  <div class="sec au">Partie 4 — Contraintes & Comparaison</div>
+  <h2 class="au d1">Comparaison des Approches</h2>
+  <p class="au d1" style="margin-bottom:.8rem;font-size:.82rem">Analyse critique : ce qui différencie un système complet d'un prototype incomplet</p>
+  <div class="au d2" style="overflow-x:auto">
+  <table class="cmp">
+    <tr><th style="width:20%">Critère</th><th style="width:34%">Approche Basique</th><th style="width:46%">Notre Approche</th></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Arrivées véhicules</td><td class="bad">Données statiques, pas de stochastique</td><td class="good">Processus de Poisson (λ) — arrivées aléatoires</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Temps de service</td><td class="bad">Non modélisé</td><td class="good">Distribution exponentielle (μ), selon type de recharge</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Modèle de file</td><td class="bad">Champ statique, pas de modèle formel</td><td class="good">M/M/C/N avec chaîne de naissance-mort</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Déclassification</td><td class="bad">Absente — binaire</td><td class="good">Cascade Rapide→Normale→Lente→Partielle→Refus</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Énergie solaire</td><td class="mid">Valeur fixe</td><td class="good">Modèle temporel prédictif E_solar(t)</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Impact SOH</td><td class="bad">Stocké mais jamais utilisé</td><td class="good">Capacité effective = C_nom × (SOH/100)</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Vérif. autonomie</td><td class="bad">Absente</td><td class="good">Filtrage par autonomie réelle avant scorage</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">File prioritaire</td><td class="mid">Poids 0.05 — négligeable</td><td class="good">File séparée, servis en premier</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Fonction de score</td><td class="bad">km − kWh (unités inhomogènes)</td><td class="good">Normalisation puis combinaison pondérée</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Sécurité / Comm.</td><td class="bad">Absente</td><td class="good">PKI, chiffrement, anti-rejeu, V2I/I2I/Cloud</td></tr>
+    <tr><td style="font-family:var(--fh);font-weight:600">Simulation</td><td class="bad">1 véhicule, 1 décision</td><td class="good">Moteur événements discrets, milliers de véhicules</td></tr>
+  </table>
+  </div>
+</div></section>
+
+<!-- S13: Simulation -->
+<section class="slide" data-s="13"><div class="si">
+  <div class="sec au">Partie 5 — Simulation & Résultats</div>
+  <h2 class="au d1">Simulation Interactive</h2>
+  <div class="sim-grid au d2">
+    <div class="sim-panel">
+      <div class="sl">Paramètres de simulation</div>
+      <div class="sim-params">
+        <div class="sim-row"><span class="sim-lbl">λ (veh/h)</span><input class="sim-inp" id="s-lambda" type="number" value="3" min="0.5" max="8" step="0.5"></div>
+        <div class="sim-row"><span class="sim-lbl">μ (1/h)</span><input class="sim-inp" id="s-mu" type="number" value="3" min="0.5" max="8" step="0.5"></div>
+        <div class="sim-row"><span class="sim-lbl">C (prises)</span><input class="sim-inp" id="s-c" type="number" value="3" min="1" max="10" step="1"></div>
+        <div class="sim-row"><span class="sim-lbl">N (capacité)</span><input class="sim-inp" id="s-n" type="number" value="10" min="2" max="30" step="1"></div>
+        <div class="sim-row"><span class="sim-lbl">Stations</span><input class="sim-inp" id="s-stations" type="number" value="3" min="1" max="10" step="1"></div>
+        <div class="sim-row"><span class="sim-lbl">Durée (h)</span><input class="sim-inp" id="s-dur" type="number" value="24" min="1" max="100" step="1"></div>
+        <div style="border-top:1px solid var(--bd);padding-top:.4rem;margin-top:.2rem">
+          <div class="sim-row"><span class="sim-lbl">Déclassification</span><label class="sim-toggle"><input type="checkbox" id="s-declass" checked><span class="sl"></span></label></div>
+          <div class="sim-row"><span class="sim-lbl">Vérif. SOH</span><label class="sim-toggle"><input type="checkbox" id="s-soh" checked><span class="sl"></span></label></div>
+          <div class="sim-row"><span class="sim-lbl">Vérif. autonomie</span><label class="sim-toggle"><input type="checkbox" id="s-auto" checked><span class="sl"></span></label></div>
+          <div class="sim-row"><span class="sim-lbl">File prioritaire</span><label class="sim-toggle"><input type="checkbox" id="s-prio" checked><span class="sl"></span></label></div>
+          <div class="sim-row"><span class="sim-lbl">Sécurité PKI</span><label class="sim-toggle"><input type="checkbox" id="s-sec" checked><span class="sl"></span></label></div>
+          <div class="sim-row"><span class="sim-lbl">Perte comm. (%)</span><input class="sim-inp" id="s-loss" type="number" value="5" min="0" max="50" step="1"></div>
+        </div>
+        <button class="sim-btn" id="btn-sim" onclick="runFullSim()"><i class="fa-solid fa-play"></i>&nbsp; Relancer la Simulation</button>
+      </div>
+    </div>
+    <div>
+      <div class="sim-metrics" id="sim-metrics">
+        <div class="sim-metric"><div class="mv tr" id="m-prefus">—</div><div class="ml">P_refus (%)</div></div>
+        <div class="sim-metric"><div class="mv ts" id="m-wait">—</div><div class="ml">W moyen (min)</div></div>
+        <div class="sim-metric"><div class="mv te" id="m-util">—</div><div class="ml">Utilisation ρ</div></div>
+        <div class="sim-metric"><div class="mv tg" id="m-served">—</div><div class="ml">Véhicules servis</div></div>
+      </div>
+      <div class="sim-charts" id="sim-charts">
+        <div class="sim-chart"><div class="sim-chart-title">P_refus selon λ (avec/sans déclassification)</div><canvas id="ch-prefus"></canvas></div>
+        <div class="sim-chart"><div class="sim-chart-title">Temps moyen d'attente W selon λ</div><canvas id="ch-wait"></canvas></div>
+        <div class="sim-chart"><div class="sim-chart-title">Utilisation des prises ρ selon λ</div><canvas id="ch-util"></canvas></div>
+        <div class="sim-chart"><div class="sim-chart-title">Énergie solaire : produite vs consommée</div><canvas id="ch-energy"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- S14: Résultats -->
+<section class="slide" data-s="14"><div class="si">
+  <div class="sec au">Partie 5 — Simulation & Résultats</div>
+  <h2 class="au d1">Analyse des Résultats</h2>
+  <div class="g3 au d2" style="margin-bottom:1rem">
+    <div class="card c-s"><div class="ci s"><i class="fa-solid fa-chart-line"></i></div><div class="ct">Impact du déclassification</div><div class="cd">Le processus de déclassification (Rapide→Lente→Partielle) réduit significativement P_refus, surtout lorsque λ approche la saturation. Sans déclassification, le taux de refus augmente brutalement dès ρ > 0.6.</div></div>
+    <div class="card c-e"><div class="ci e"><i class="fa-solid fa-clock"></i></div><div class="ct">Temps d'attente contrôlé</div><div class="cd">La contrainte T_total ≤ T_wait_max dans l'ACA garantit que W reste dans des limites acceptables même sous forte charge. Le file prioritaire réduit W pour les véhicules urgents.</div></div>
+    <div class="card c-s"><div class="ci s"><i class="fa-solid fa-sun"></i></div><div class="ct">Autoconsommation solaire</div><div class="cd">La prédiction E_solar(t) permet d'accepter des recharges que l'énergie stockée seule ne permettrait pas, augmentant le taux d'autoconsommation du photovoltaïque.</div></div>
+  </div>
+  <div class="g3 au d3">
+    <div class="card c-r"><div class="ci r"><i class="fa-solid fa-wifi"></i></div><div class="ct">Impact des pertes de communication</div><div class="cd">À 5% de perte : impact négligeable. À 20% : P_refus augmente de 8-12 points car des véhicules ne reçoivent pas la réponse des stations à temps.</div></div>
+    <div class="card c-g"><div class="ci g"><i class="fa-solid fa-shield-halved"></i></div><div class="ct">Overhead sécurité</div><div class="cd">L'authentification PKI ajoute ~50ms par requête. La détection de fraude (5% d'attaques) bloque les tentatives sans impact sur les véhicules légitimes.</div></div>
+    <div class="card c-e"><div class="ci e"><i class="fa-solid fa-scale-balanced"></i></div><div class="ct">Dimensionnement optimal</div><div class="cd">Pour λ=3, C=3, N=10 : P_refus < 5% avec déclassification. Pour λ=5, il faut C≥5 ou N≥15 pour maintenir P_refus < 10%.</div></div>
+  </div>
+</div></section>
+
+<!-- S15: Conclusion -->
+<section class="slide" data-s="15"><div class="si">
+  <div class="sec au">Partie 6 — Conclusion & Perspectives</div>
+  <h2 class="au d1">Conclusion & Perspectives</h2>
+  <div class="cgrid au d2">
+    <div class="citem"><div class="cii" style="background:var(--solg);color:var(--sol)"><i class="fa-solid fa-brain"></i></div><div class="cit"><h4>Décision multi-critère</h4><p>SOC, SOH, distance, énergie solaire, temps d'attente, priorité — combinés dans un score normalisé avec vérification de faisabilité préalable.</p></div></div>
+    <div class="citem"><div class="cii" style="background:var(--evg);color:var(--ev)"><i class="fa-solid fa-arrow-down-wide-short"></i></div><div class="cit"><h4>ACA + Déclassification</h4><p>Maximiser le taux d'acceptation via la cascade Rapide→Normale→Lente→Partielle avec double contrainte temporelle et énergétique.</p></div></div>
+    <div class="citem"><div class="cii" style="background:rgba(217,94,8,0.08);color:var(--wrn)"><i class="fa-solid fa-square-root-variable"></i></div><div class="cit"><h4>Fondement M/M/C/N</h4><p>Modèle analytique rigoureux avec chaîne de naissance-mort, formules P_N, L_q, W validées par simulation stochastique.</p></div></div>
+    <div class="citem"><div class="cii" style="background:var(--bgs);color:var(--txd)"><i class="fa-solid fa-network-wired"></i></div><div class="cit"><h4>Architecture distribuée</h4><p>V2I→I2I→Cloud avec tolérance aux pannes, gestion des pertes de communication et coordination inter-stations.</p></div></div>
+    <div class="citem"><div class="cii" style="background:rgba(212,43,43,0.07);color:var(--red)"><i class="fa-solid fa-lock"></i></div><div class="cit"><h4>Sécurité intégrée</h4><p>PKI, chiffrement, signature, anti-rejeu, consensus distribué — contre toutes les menaces identifiées.</p></div></div>
+    <div class="citem"><div class="cii" style="background:var(--evg);color:var(--ev)"><i class="fa-solid fa-flask"></i></div><div class="cit"><h4>Simulation validée</h4><p>Moteur à événements discrets avec Poisson, exponentielle, prédiction solaire — résultats quantitatifs et analyse de sensibilité.</p></div></div>
+  </div>
+  <div class="au d3" style="margin-top:1.2rem;padding:1rem 1.2rem;background:var(--bgc);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh)">
+    <h3 style="color:var(--sol);margin-bottom:.5rem"><i class="fa-solid fa-rocket"></i>&nbsp; Perspectives</h3>
+    <div class="g2">
+      <p><strong>Apprentissage automatique :</strong> Remplacer les poids fixes du score par un modèle entraîné sur les données de simulation pour une sélection de station adaptative.</p>
+      <p><strong>V2G bidirectionnel :</strong> Étendre le système pour permettre aux véhicules de restituer de l'énergie au réseau lors des pics de production solaire.</p>
+      <p><strong>Mobilité prédictive :</strong> Intégrer les données de trafic et de météo pour anticiper la demande et pré-positionner l'énergie dans les stations.</p>
+      <p><strong>Blockchain :</strong> Utiliser une blockchain pour la gestion décentralisée des certificats d'authentification et la traçabilité des transactions énergétiques.</p>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:1.2rem;font-family:var(--fh);font-size:.95rem;color:var(--txm);font-weight:300" class="au d4">
+    <div class="al" style="margin:1rem auto"></div>
+    Merci pour votre attention
+  </div>
+</div></section>
+
+</div>
+
+<script>
+/* ===== NAVIGATION ===== */
+const slides=document.querySelectorAll('.slide'),TS=slides.length;
+let cur=0;
+const pbar=document.getElementById('pbar'),scEl=document.getElementById('sc');
+let simAutoRun=false;
+
+function go(i){
+  if(i<0||i>=TS)return;
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  pbar.style.width=(cur/(TS-1)*100)+'%';
+  scEl.textContent=(cur+1)+' / '+TS;
+  /* Auto-run simulation quand on arrive sur la slide 13 */
+  if(cur===13&&!simAutoRun){simAutoRun=true;setTimeout(runFullSim,300)}
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(cur+1)}
+  else if(e.key==='ArrowLeft'){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home'){e.preventDefault();go(0)}
+  else if(e.key==='End'){e.preventDefault();go(TS-1)}
+  else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen()}
+});
+go(0);
+
+/* ===== MOTEUR DE SIMULATION ===== */
+const PF=50,PN=22,PS=3.7,BCAP=75,ETA_KM=0.15,SOC_MIN=20;
+
+function solarP(t,peak){return(t<6||t>18)?0:peak*Math.sin(Math.PI*(t-6)/12)}
+function fact(n){let r=1;for(let i=2;i<=n;i++)r*=i;return r}
+
+function simulate(cfg){
+  const{lambda,mu,C,N,numStations,durationH,useDeclass,useSOH,useAutonomy,usePriority,useSecurity,commLoss}=cfg;
+  const durMin=durationH*60;
+  /* Initialiser stations */
+  const stations=[];
+  for(let i=0;i<numStations;i++)stations.push({
+    id:i,distance:2+Math.random()*12,
+    chargers:Array(C).fill(null),queue:[],
+    maxQueue:N-C,solarPeak:15+Math.random()*25,
+    storage:80+Math.random()*120,
+    served:0,refused:0,partial:0,totalWait:0,
+    totalUsed:0,totalSolarUsed:0,totalStoredUsed:0
+  });
+  /* Générer arrivées Poisson */
+  const vehicles=[];let t=0,vid=0;
+  while(t<durMin){
+    const ia=-Math.log(Math.max(1e-12,Math.random()))/lambda*60;
+    t+=ia;if(t>durMin)break;
+    vehicles.push({id:vid++,arrTime:t,soc:10+Math.random()*40,soh:70+Math.random()*30,
+      priority:Math.random()<.15?1:0,targetSoc:70+Math.random()*20,cap:BCAP,
+      isFraud:useSecurity&&Math.random()<.05,status:null,waitTime:0,serviceTime:0,
+      energyRec:0,stationId:-1,chargeRate:0});
+  }
+  /* Traiter chaque véhicule */
+  for(const v of vehicles){
+    if(useSecurity&&v.isFraud){v.status='fraud';continue}
+    const cEff=useSOH?v.cap*(v.soh/100):v.cap;
+    const eCur=cEff*(v.soc/100);
+    const autonomy=useAutonomy?eCur*ETA_KM:9999;
+    let reach=stations.filter(s=>s.distance<=autonomy);
+    if(!reach.length)reach=[...stations];
+    if(commLoss>0)reach=reach.filter(()=>Math.random()*100>commLoss);
+    if(!reach.length){v.status='comm_lost';continue}
+    /* Scorer les stations */
+    let best=null,bestS=Infinity;
+    for(const s of reach){
+      const qL=s.queue.length,freeC=s.chargers.filter(c=>c===null).length;
+      const avgSvc=60/mu;
+      const waitEst=(qL/Math.max(1,C))*avgSvc;
+      const eReq=cEff*((v.targetSoc-v.soc)/100);
+      const svcT=eReq/PN;
+      if(waitEst+svcT>120)continue;
+      const score=.30*(s.distance/15)+.25*(waitEst/60)+.15*(qL/Math.max(1,N))
+                  -.15*(s.storage/200)-.10*(freeC/Math.max(1,C))-.05*v.priority;
+      if(score<bestS){bestS=score;best=s}
+    }
+    if(!best){v.status='no_station';continue}
+    const s=best;
+    const eReq=cEff*((v.targetSoc-v.soc)/100);
+    const tH=v.arrTime/60;
+    if(s.queue.length>=s.maxQueue){v.status='queue_full';s.refused++;continue}
+    const types=useDeclass?[PF,PN,PS]:[PN];
+    let ok=false;
+    for(const rate of types){
+      const svcMin=eReq/rate*60;
+      let eSol=0;for(let dt=0;dt<svcMin/60;dt+=.1)eSol+=solarP(tH+dt,s.solarPeak)*.1;
+      const eAvail=eSol+s.storage;
+      const avgSvc=60/mu;
+      const wEst=usePriority&&v.priority?Math.max(0,(s.queue.filter(q=>!q.vehicle.priority).length/Math.max(1,C))*avgSvc*.3):(s.queue.length/Math.max(1,C))*avgSvc;
+      if(svcMin+wEst<=120&&eAvail>=eReq){
+        v.status='served';v.stationId=s.id;v.chargeRate=rate;v.waitTime=wEst;v.serviceTime=svcMin;v.energyRec=eReq;
+        s.served++;s.totalUsed+=eReq;s.totalSolarUsed+=Math.min(eSol,eReq);s.totalStoredUsed+=Math.max(0,eReq-eSol);
+        s.storage-=Math.max(0,eReq-eSol);ok=true;break;
+      }
+    }
+    if(!ok&&useDeclass){
+      const eP=Math.abs(cEff*((SOC_MIN-v.soc)/100));
+      if(eP>0&&eP<=s.storage){
+        v.status='partial';v.stationId=s.id;v.chargeRate=PS;v.waitTime=0;v.serviceTime=eP/PS*60;v.energyRec=eP;
+        s.partial++;s.totalUsed+=eP;s.totalStoredUsed+=eP;s.storage-=eP;ok=true;
+      }
+    }
+    if(!ok){v.status='refused';s.refused++}
+  }
+  /* Métriques */
+  const total=vehicles.length;
+  const served=vehicles.filter(v=>v.status==='served').length;
+  const refused=vehicles.filter(v=>v.status==='refused'||v.status==='queue_full'||v.status==='no_station').length;
+  const prefus=total>0?refused/total:0;
+  const wMean=served>0?vehicles.filter(v=>v.status==='served').reduce((a,v)=>a+v.waitTime,0)/served:0;
+  const totalSvc=stations.reduce((a,s)=>a+s.totalUsed/PN*60,0);
+  const util=Math.min(1,totalSvc/(C*durMin*numStations));
+  const solGen=stations.reduce((a,s)=>{let g=0;for(let t=0;t<durationH;t+=.1)g+=solarP(t,s.solarPeak)*.1;return a+g},0);
+  const solUsed=stations.reduce((a,s)=>a+s.totalSolarUsed,0);
+  const stoUsed=stations.reduce((a,s)=>a+s.totalStoredUsed,0);
+  return{total,served,partial:vehicles.filter(v=>v.status==='partial').length,refused,fraud:vehicles.filter(v=>v.status==='fraud').length,commLost:vehicles.filter(v=>v.status==='comm_lost').length,prefus,wMean,util,solGen,solUsed,stoUsed};
+}
+
+/* ===== GRAPHIQUES ===== */
+let cInst=[];
+function clearC(){cInst.forEach(c=>c.destroy());cInst=[]}
+function cOpts(yL){
+  return{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#6B665C',font:{size:9,family:'DM Sans'},boxWidth:10}}},
+    scales:{
+      x:{title:{display:true,text:'λ (veh/h)',color:'#A09A90',font:{size:9,family:'Space Grotesk'}},ticks:{color:'#A09A90',font:{size:8}},grid:{color:'#E3E0D8'}},
+      y:{title:{display:true,text:yL,color:'#A09A90',font:{size:9,family:'Space Grotesk'}},ticks:{color:'#A09A90',font:{size:8}},grid:{color:'#E3E0D8'},beginAtZero:true}
+    }
+  };
+}
+
+function runFullSim(){
+  const btn=document.getElementById('btn-sim');
+  btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Calcul...';
+  const lambda=parseFloat(document.getElementById('s-lambda').value);
+  const mu=parseFloat(document.getElementById('s-mu').value);
+  const C=parseInt(document.getElementById('s-c').value);
+  const N=parseInt(document.getElementById('s-n').value);
+  const nS=parseInt(document.getElementById('s-stations').value);
+  const dur=parseInt(document.getElementById('s-dur').value);
+  const uD=document.getElementById('s-declass').checked;
+  const uSOH=document.getElementById('s-soh').checked;
+  const uA=document.getElementById('s-auto').checked;
+  const uP=document.getElementById('s-prio').checked;
+  const uSec=document.getElementById('s-sec').checked;
+  const cL=parseFloat(document.getElementById('s-loss').value);
+  const cfg={lambda,mu,C,N,numStations:nS,durationH:dur,useDeclass:uD,useSOH:uSOH,useAutonomy:uA,usePriority:uP,useSecurity:uSec,commLoss:cL};
+
+  setTimeout(()=>{
+    clearC();
+    /* Résultat principal */
+    const r=simulate(cfg);
+    document.getElementById('m-prefus').textContent=(r.prefus*100).toFixed(1)+'%';
+    document.getElementById('m-wait').textContent=r.wMean.toFixed(1);
+    document.getElementById('m-util').textContent=(r.util*100).toFixed(1)+'%';
+    document.getElementById('m-served').textContent=r.served+'/'+r.total;
+
+    /* Courbes pour plusieurs λ */
+    const lams=[1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6];
+    const pWith=lams.map(l=>{const x=simulate({...cfg,lambda:l,useDeclass:true});return +(x.prefus*100).toFixed(2)});
+    const pWithout=lams.map(l=>{const x=simulate({...cfg,lambda:l,useDeclass:false});return +(x.prefus*100).toFixed(2)});
+    cInst.push(new Chart(document.getElementById('ch-prefus'),{
+      type:'line',data:{labels:lams,datasets:[
+        {label:'Sans déclassification',data:pWithout,borderColor:'#D42B2B',backgroundColor:'rgba(212,43,43,0.06)',fill:true,tension:.3,pointRadius:3,borderWidth:2},
+        {label:'Avec déclassification',data:pWith,borderColor:'#008A6E',backgroundColor:'rgba(0,138,110,0.06)',fill:true,tension:.3,pointRadius:3,borderWidth:2}
+      ]},options:cOpts('P_refus (%)')
+    }));
+    const wD=lams.map(l=>{const x=simulate({...cfg,lambda:l});return +x.wMean.toFixed(2)});
+    cInst.push(new Chart(document.getElementById('ch-wait'),{
+      type:'line',data:{labels:lams,datasets:[
+        {label:'W moyen (min)',data:wD,borderColor:'#C48808',backgroundColor:'rgba(196,136,8,0.06)',fill:true,tension:.3,pointRadius:3,borderWidth:2}
+      ]},options:cOpts('W (minutes)')
+    }));
+    const uD2=lams.map(l=>{const x=simulate({...cfg,lambda:l});return +(x.util*100).toFixed(1)});
+    cInst.push(new Chart(document.getElementById('ch-util'),{
+      type:'line',data:{labels:lams,datasets:[
+        {label:'ρ utilisation (%)',data:uD2,borderColor:'#008A6E',backgroundColor:'rgba(0,138,110,0.06)',fill:true,tension:.3,pointRadius:3,borderWidth:2}
+      ]},options:cOpts('ρ (%)')
+    }));
+    const sG=lams.map(()=>+(r.solGen/nS).toFixed(1));
+    const sU=lams.map(l=>{const x=simulate({...cfg,lambda:l});return +(x.solUsed/nS).toFixed(1)});
+    cInst.push(new Chart(document.getElementById('ch-energy'),{
+      type:'bar',data:{labels:lams.map(l=>'λ='+l),datasets:[
+        {label:'Produite (kWh/st)',data:sG,backgroundColor:'rgba(196,136,8,0.45)',borderRadius:3},
+        {label:'Consommée (kWh/st)',data:sU,backgroundColor:'rgba(0,138,110,0.45)',borderRadius:3}
+      ]},options:cOpts('kWh')
+    }));
+    btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-play"></i>&nbsp; Relancer la Simulation';
+  },60);
+}
+</script>
+</body>
+</html>ification ===== -->
+  <section class="slide" data-slide="10">
+    <div class="slide-inner">
+      <h2 class="anim-up">Processus de Déclassification</h2>
+      <p class="anim-up anim-up-d1" style="margin-bottom:1.5rem;">
+        Lorsqu'un véhicule demande une recharge que la station ne peut pas fournir (manque d'énergie ou dépassement du temps max), le système tente progressivement des modes de recharge inférieurs avant de refuser.
+      </p>
+      <div class="declass-flow anim-up anim-up-d2">
+        <div class="declass-step" style="border-color: var(--accent-danger);">
+          <div class="ds-label text-danger">Rapide</div>
+          <div class="ds-sub">P = 50+ kW</div>
+        </div>
+        <div class="declass-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="declass-step" style="border-color: var(--accent-warn);">
+          <div class="ds-label text-warn">Normale</div>
+          <div class="ds-sub">P = 7–22 kW</div>
+        </div>
+        <div class="declass-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="declass-step" style="border-color: var(--accent-solar);">
+          <div class="ds-label text-solar">Lente</div>
+          <div class="ds-sub">P ≤ 3.7 kW</div>
+        </div>
+        <div class="declass-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="declass-step" style="border-color: var(--accent-ev);">
+          <div class="ds-label text-ev">Partielle</div>
+          <div class="ds-sub">SOC → SOC_min</div>
+        </div>
+        <div class="declass-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="declass-step reject">
+          <div class="ds-label">Refus / Redirection</div>
+          <div class="ds-sub">Vers autre station</div>
+        </div>
+      </div>
+      <div class="grid-3 anim-up anim-up-d3" style="margin-top:1.5rem;">
+        <div class="card">
+          <div class="card-title text-danger"><i class="fa-solid fa-gauge-high"></i>&nbsp; Rapide → Normale</div>
+          <div class="card-desc">Si l'énergie solaire est insuffisante pour une charge rapide, réduire la puissance diminue le pic de consommation.</div>
+        </div>
+        <div class="card">
+          <div class="card-title text-solar"><i class="fa-solid fa-gauge"></i>&nbsp; Normale → Lente</div>
+          <div class="card-desc">Si même la normale dépasse le seuil temporel ou énergétique, la lente étale la charge sur une durée plus longue.</div>
+        </div>
+        <div class="card">
+          <div class="card-title text-ev"><i class="fa-solid fa-battery-quarter"></i>&nbsp; Lente → Partielle</div>
+          <div class="card-desc">Dernier compromis : recharger juste assez pour atteindre une autre station au lieu de refuser.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 11 : Allocation Distribuée ===== -->
+  <section class="slide" data-slide="11">
+    <div class="slide-inner">
+      <h2 class="anim-up">Allocation Distribuée EV ↔ Stations</h2>
+      <div class="grid-2 anim-up anim-up-d1">
+        <div>
+          <div class="section-label">Algorithme d'assignation</div>
+          <div class="code-block">
+<span class="kw">INPUT</span> : EV_pos, SOC_in, T_wait_max
+<span class="kw">OUTPUT</span> : Adresse de la station sélectionnée
+
+<span class="cm">// 1. Le véhicule envoie sa position</span>
+sendToServer(EV_pos, SOC_in, T_wait_max)
+
+<span class="cm">// 2. Calculer l'autonomie maximale</span>
+d_max ← <span class="fn">autonomy</span>(SOC_in, SOH)
+
+<span class="cm">// 3. Interroger les stations à portée (V2I)</span>
+candidates ← []
+<span class="kw">for each</span> station <span class="kw">in</span> range(EV_pos, d_max):
+  resp ← <span class="fn">queryStation</span>(station, SOC_in)
+  <span class="kw">if</span> resp.admission == Accepter:
+    candidates.<span class="fn">add</span>(resp)
+
+<span class="cm">// 4. Si aucune station locale (I2I)</span>
+<span class="kw">if</span> candidates.isEmpty():
+  candidates ← <span class="fn">queryNeighborStations</span>()
+<span class="cm">// 5. Si toujours rien (Cloud)</span>
+<span class="kw">if</span> candidates.isEmpty():
+  candidates ← <span class="fn">queryCloud</span>()
+
+<span class="cm">// 6. Sélectionner la meilleure</span>
+best ← <span class="fn">argmin</span>(waitTime + α·distance)
+sendToEV(best.address)
+<span class="fn">updateStationStatus</span>(best)
+          </div>
+        </div>
+        <div>
+          <div class="section-label">3 niveaux de communication</div>
+          <div class="card card-ev" style="margin-bottom:0.6rem;">
+            <div class="card-title"><span class="tag tag-ev">V2I</span> Véhicule → Station locale</div>
+            <div class="card-desc">Communication directe (Wi-Fi, DSRC, 5G). Le véhicule contacte les stations dans son rayon d'autonomie. Temps de réponse : <strong>~ms</strong>.</div>
+          </div>
+          <div class="card card-solar" style="margin-bottom:0.6rem;">
+            <div class="card-title"><span class="tag tag-solar">I2I</span> Station → Stations voisines</div>
+            <div class="card-desc">Si aucune station locale n'accepte, la station contacte ses voisines. Coordination distribuée sans passer par le Cloud. Temps : <strong>~100ms</strong>.</div>
+          </div>
+          <div class="card" style="margin-bottom:1rem;">
+            <div class="card-title"><span class="tag" style="background:rgba(255,255,255,0.06);color:var(--text-muted);">Cloud</span> Internet → Réseau global</div>
+            <div class="card-desc">Dernier recours si aucune station locale ou voisine ne peut servir. Requête au serveur central pour trouver une station plus éloignée.</div>
+          </div>
+          <div class="card card-danger">
+            <div class="card-title"><i class="fa-solid fa-triangle-exclamation"></i>&nbsp; Tolérance aux pannes</div>
+            <div class="card-desc">Chaque niveau a un timeout. Si V2I échoue → I2I. Si I2I échoue → Cloud. Si tout échoue → le véhicule est notifié avec les stations les plus proches même si refusées.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 12 : Sécurité & Communication ===== -->
+  <section class="slide" data-slide="12">
+    <div class="slide-inner">
+      <h2 class="anim-up">Sécurité & Communication</h2>
+      <div class="grid-2 anim-up anim-up-d1">
+        <div>
+          <div class="section-label text-danger"><i class="fa-solid fa-shield-halved"></i> Menaces identifiées</div>
+          <div class="card card-danger" style="margin-bottom:0.5rem;">
+            <div class="card-title">Faux véhicules (identité falsifiée)</div>
+            <div class="card-desc">Un acteur malveillant se fait passer pour un EV prioritaire pour obtenir une recharge.</div>
+          </div>
+          <div class="card card-danger" style="margin-bottom:0.5rem;">
+            <div class="card-title">Injection de paquets / Messages falsifiés</div>
+            <div class="card-desc">Modifier les paramètres SOC, SOH ou priorité dans la requête V2I.</div>
+          </div>
+          <div class="card card-danger" style="margin-bottom:0.5rem;">
+            <div class="card-title">Rejeu d'attaque (Replay Attack)</div>
+            <div class="card-desc">Réémettre une requête valide d'un véhicule précédent pour occuper une prise.</div>
+          </div>
+          <div class="card card-danger" style="margin-bottom:0.5rem;">
+            <div class="card-title">Déni de service (DoS)</div>
+            <div class="card-desc">Inonder la station de requêtes pour saturer la file et bloquer les véhicules légitimes.</div>
+          </div>
+          <div class="card card-danger">
+            <div class="card-title">Élévation frauduleuse de priorité</div>
+            <div class="card-desc">Modifier le champ "priorité" pour passer devant les autres véhicules.</div>
+          </div>
+        </div>
+        <div>
+          <div class="section-label text-success"><i class="fa-solid fa-lock"></i> Contre-mesures proposées</div>
+          <div class="card card-success" style="margin-bottom:0.5rem;">
+            <div class="card-title">Authentification PKI / Certificats V2G</div>
+            <div class="card-desc">Chaque véhicule possède un certificat numérique signé par une autorité de confiance. La station vérifie l'identité avant tout traitement.</div>
+          </div>
+          <div class="card card-success" style="margin-bottom:0.5rem;">
+            <div class="card-title">Chiffrement des messages V2I</div>
+            <div class="card-desc">Tous les échanges sont chiffrés (TLS/AES) pour empêcher l'interception et la modification des paramètres.</div>
+          </div>
+          <div class="card card-success" style="margin-bottom:0.5rem;">
+            <div class="card-title">Signature numérique des requêtes</div>
+            <div class="card-desc">Chaque requête est signée avec la clé privée du véhicule. La station vérifie la signature avec la clé publique (anti-rejeu via timestamp/nonce).</div>
+          </div>
+          <div class="card card-success" style="margin-bottom:0.5rem;">
+            <div class="card-title">Timeout & Retransmission adaptative</div>
+            <div class="card-desc">Gestion des pertes de paquets : retransmission avec backoff exponentiel, détection de station déconnectée.</div>
+          </div>
+          <div class="card card-success">
+            <div class="card-title">Consensus distribué entre stations</div>
+            <div class="card-desc">Mécanisme de vérification croisée I2I pour détecter les incohérences (ex: un véhicule signalé simultanément dans deux stations).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 13 : Simulation ===== -->
+  <section class="slide" data-slide="13">
+    <div class="slide-inner">
+      <h2 class="anim-up">Simulation & Implémentation</h2>
+      <div class="grid-2 anim-up anim-up-d1">
+        <div>
+          <div class="section-label">Code de simulation (Python + SimPy)</div>
+          <div class="code-block">
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> simpy
+
+<span class="cm"># Paramètres M/M/C/N</span>
+LAMBDA, MU, C, N = <span class="num">2.0</span>, <span class="num">3.0</span>, <span class="num">3</span>, <span class="num">10</span>
+P_SLOW, P_NORM, P_FAST = <span class="num">3.7</span>, <span class="num">22</span>, <span class="num">50</span>
+
+<span class="kw">def</span> <span class="fn">ev_arrival</span>(env, station, stats):
+    <span class="str">"""Génère les arrivées Poisson"""</span>
+    <span class="kw">while</span> True:
+        <span class="kw">yield</span> env.<span class="fn">timeout</span>(np.random.<span class="fn">exponential</span>(<span class="num">1</span>/LAMBDA))
+        soc = np.random.<span class="fn">uniform</span>(<span class="num">0.10</span>, <span class="num">0.50</span>)
+        soh = np.random.<span class="fn">uniform</span>(<span class="num">0.70</span>, <span class="num">1.0</span>)
+        ev = {<span class="str">'soc'</span>: soc, <span class="str">'soh'</span>: soh,
+             <span class="str">'priority'</span>: np.random.<span class="fn">choice</span>([<span class="num">0</span>,<span class="num">1</span>])}
+        env.<span class="fn">process</span>(<span class="fn">admission_control</span>(env, station, ev, stats))
+
+<span class="kw">def</span> <span class="fn">admission_control</span>(env, station, ev, stats):
+    <span class="str">"""ACA avec déclassement"""</span>
+    <span class="kw">if</span> station.count >= N:
+        stats[<span class="str">'refused'</span>] += <span class="num">1</span>; <span class="kw">return</span>
+    e_req = <span class="fn">calc_energy</span>(ev[<span class="str">'soc'</span>], <span class="num">0.80</span>)
+    <span class="kw">for</span> rate <span class="kw">in</span> [P_FAST, P_NORM, P_SLOW]:
+        t_svc = e_req / rate
+        <span class="kw">if</span> t_svc <= T_WAIT_MAX:
+            <span class="kw">with</span> station.<span class="fn">request</span>() <span class="kw">as</span> req:
+                <span class="kw">yield</span> req
+                stats[<span class="str">'served'</span>] += <span class="num">1</span>
+                <span class="kw">yield</span> env.<span class="fn">timeout</span>(t_svc)
+            <span class="kw">return</span>
+    stats[<span class="str">'refused'</span>] += <span class="num">1</span>
+
+env = simpy.<span class="fn">Environment</span>()
+station = simpy.<span class="fn">Resource</span>(env, capacity=C)
+stats = {<span class="str">'served'</span>:<span class="num">0</span>, <span class="str">'refused'</span>:<span class="num">0</span>}
+env.<span class="fn">process</span>(<span class="fn">ev_arrival</span>(env, station, stats))
+env.<span class="fn">run</span>(until=<span class="num">10000</span>)
+          </div>
+        </div>
+        <div>
+          <div class="section-label">Métriques d'évaluation</div>
+          <div class="grid-2" style="gap:0.6rem; margin-bottom:1rem;">
+            <div class="card card-danger">
+              <div class="card-title">P_refus</div>
+              <div class="card-desc">Taux de refus des EV — indicateur principal de performance</div>
+            </div>
+            <div class="card card-solar">
+              <div class="card-title">W moyen</div>
+              <div class="card-desc">Temps moyen d'attente dans la file (objectif : minimiser)</div>
+            </div>
+            <div class="card card-ev">
+              <div class="card-title">ρ utilisation</div>
+              <div class="card-desc">Taux d'utilisation des prises (objectif : maximiser sans saturer)</div>
+            </div>
+            <div class="card card-solar">
+              <div class="card-title">E_solaire utilisée</div>
+              <div class="card-desc">Part de l'énergie solaire effectivement consommée vs gaspillée</div>
+            </div>
+          </div>
+          <div class="card card-danger">
+            <div class="card-title"><i class="fa-solid fa-bug"></i>&nbsp; Impact de la sécurité</div>
+            <div class="card-desc">Taux de détection de fraude, faux positifs, overhead lié au chiffrement et à l'authentification PKI.</div>
+          </div>
+          <div class="card" style="margin-top:0.6rem;">
+            <div class="card-title"><i class="fa-solid fa-wifi"></i>&nbsp; Impact de la communication</div>
+            <div class="card-desc">Variation de P_refus et W en fonction du taux de perte de paquets (0% → 20%) et de la latence V2I.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 14 : Résultats Attendus ===== -->
+  <section class="slide" data-slide="14">
+    <div class="slide-inner">
+      <h2 class="anim-up">Résultats Attendus</h2>
+      <div class="grid-3 anim-up anim-up-d1" style="margin-bottom:1rem;">
+        <div class="chart-container">
+          <div class="chart-title">Taux de refus P_N selon λ (arrivées/heure)</div>
+          <canvas id="chart-refus"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">Temps moyen d'attente W selon λ</div>
+          <canvas id="chart-wait"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">Impact du déclassement sur P_refus</div>
+          <canvas id="chart-declass"></canvas>
+        </div>
+      </div>
+      <div class="grid-3 anim-up anim-up-d2">
+        <div class="card card-solar">
+          <div class="card-title"><i class="fa-solid fa-chart-line"></i>&nbsp; Scénarios comparés</div>
+          <div class="card-desc">Avec/sans déclassement, avec/sans prédiction solaire, avec/sans priorité — pour chaque scénario : P_refus, W, ρ.</div>
+        </div>
+        <div class="card card-ev">
+          <div class="card-title"><i class="fa-solid fa-signal"></i>&nbsp; Impact communication</div>
+          <div class="card-desc">Graphes de P_refus et W en fonction du taux de perte de paquets (0%, 5%, 10%, 20%) et latence (10ms, 100ms, 500ms).</div>
+        </div>
+        <div class="card card-danger">
+          <div class="card-title"><i class="fa-solid fa-shield-halved"></i>&nbsp; Impact sécurité</div>
+          <div class="card-desc">Taux de détection de fraude, temps d'authentification PKI, faux positifs/négatifs, overhead communication.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 15 : Conclusion ===== -->
+  <section class="slide" data-slide="15">
+    <div class="slide-inner">
+      <h2 class="anim-up">Conclusion & Perspectives</h2>
+      <div class="conclusion-grid anim-up anim-up-d1">
+        <div class="conclusion-item">
+          <div class="ci-icon" style="background:var(--accent-solar-glow); color:var(--accent-solar);"><i class="fa-solid fa-brain"></i></div>
+          <div class="ci-text">
+            <h4>Décision multi-critère</h4>
+            <p>Système intelligent combinant SOC, SOH, distance, énergie solaire, temps d'attente et priorité pour optimiser chaque admission.</p>
+          </div>
+        </div>
+        <div class="conclusion-item">
+          <div class="ci-icon" style="background:var(--accent-ev-glow); color:var(--accent-ev);"><i class="fa-solid fa-arrow-down-wide-short"></i></div>
+          <div class="ci-text">
+            <h4>ACA + Déclassement</h4>
+            <p>Maximiser le taux d'acceptation en proposant des alternatives (Rapide → Normale → Lente → Partielle) avant de refuser.</p>
+          </div>
+        </div>
+        <div class="conclusion-item">
+          <div class="ci-icon" style="background:rgba(249,115,22,0.12); color:var(--accent-warn);"><i class="fa-solid fa-square-root-variable"></i></div>
+          <div class="ci-text">
+            <h4>Fondement mathématique</h4>
+            <p>Modèle M/M/C/N rigoureux avec chaîne de naissance-mort, formules analytiques de P_refus, L_q et W validées par simulation.</p>
+          </div>
+        </div>
+        <div class="conclusion-item">
+          <div class="ci-icon" style="background:rgba(255,255,255,0.05); color:var(--text-muted);"><i class="fa-solid fa-network-wired"></i></div>
+          <div class="ci-text">
+            <h4>Architecture distribuée</h4>
+            <p>Communication à 3 niveaux (V2I → I2I → Cloud) avec tolérance aux pannes et coordination inter-stations.</p>
+          </div>
+        </div>
+        <div class="conclusion-item">
+          <div class="ci-icon" style="background:rgba(239,68,68,0.12); color:var(--accent-danger);"><i class="fa-solid fa-lock"></i></div>
+          <div class="ci-text">
+            <h4>Sécurité intégrée</h4>
+            <p>PKI, chiffrement, signature numérique, détection de rejeu et consensus distribué contre les fraudes et attaques.</p>
+          </div>
+        </div>
+        <div class="conclusion-item">
+          <div class="ci-icon" style="background:var(--accent-ev-glow); color:var(--accent-ev);"><i class="fa-solid fa-code"></i></div>
+          <div class="ci-text">
+            <h4>Simulation Python/MATLAB</h4>
+            <p>Implémentation complète avec SimPy, métriques quantitatives et analyse de sensibilité sur tous les paramètres.</p>
+          </div>
+        </div>
+      </div>
+      <div class="thanks-text anim-up anim-up-d3">
+        <div class="accent-line" style="margin:1.5rem auto;"></div>
+        Merci pour votre attention — Projet IoT / Cloud / Big Data — TEK-UP 2025–2026
+      </div>
+    </div>
+  </section>
+
+</div><!-- fin #deck -->
+
+<!-- Contrôles de navigation -->
+<nav id="nav-controls" role="navigation" aria-label="Navigation des slides">
+  <button id="btn-prev" aria-label="Diapositive précédente"><i class="fa-solid fa-chevron-left"></i></button>
+  <span id="slide-counter">1 / 16</span>
+  <button id="btn-next" aria-label="Diapositive suivante"><i class="fa-solid fa-chevron-right"></i></button>
+</nav>
+<!-- <button id="help-btn" aria-label="Aide"><i class="fa-solid fa-question"></i></button> -->
+<div id="help-overlay" role="dialog" aria-label="Aide navigation">
+  <div id="help-box">
+    <h3>Navigation</h3>
+    <div class="help-row"><span>Diapo suivante</span><span class="help-key">→</span></div>
+    <div class="help-row"><span>Diapo précédente</span><span class="help-key">←</span></div>
+    <div class="help-row"><span>Avancer</span><span class="help-key">Espace</span></div>
+    <div class="help-row"><span>Plein écran</span><span class="help-key">F</span></div>
+    <div class="help-row"><span>Fermer l'aide</span><span class="help-key">Échap</span></div>
+    <div style="margin-top:1rem; text-align:center;">
+      <button onclick="document.getElementById('help-overlay').classList.remove('show')" style="background:var(--accent-solar); color:#000; border:none; padding:0.5rem 1.5rem; border-radius:6px; font-family:var(--font-heading); font-weight:600; cursor:pointer; font-size:0.85rem;">Compris</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== Navigation des slides =====
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+
+  const progressBar = document.getElementById('progress-bar');
+  const slideCounter = document.getElementById('slide-counter');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const helpBtn = document.getElementById('help-btn');
+  const helpOverlay = document.getElementById('help-overlay');
+
+  function goToSlide(index) {
+    if (index < 0 || index >= totalSlides) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = index;
+    slides[currentSlide].classList.add('active');
+    progressBar.style.width = ((currentSlide / (totalSlides - 1)) * 100) + '%';
+    slideCounter.textContent = (currentSlide + 1) + ' / ' + totalSlides;
+    // Rafraîchir les graphiques si on arrive sur la slide des résultats
+    if (currentSlide === 14) renderCharts();
+  }
+
+  btnPrev.addEventListener('click', () => goToSlide(currentSlide - 1));
+  btnNext.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (helpOverlay.classList.contains('show')) {
+      if (e.key === 'Escape') helpOverlay.classList.remove('show');
+      return;
+    }
+    switch(e.key) {
+      case 'ArrowRight': case ' ': case 'PageDown':
+        e.preventDefault(); goToSlide(currentSlide + 1); break;
+      case 'ArrowLeft': case 'PageUp':
+        e.preventDefault(); goToSlide(currentSlide - 1); break;
+      case 'Home':
+        e.preventDefault(); goToSlide(0); break;
+      case 'End':
+        e.preventDefault(); goToSlide(totalSlides - 1); break;
+      case 'f': case 'F':
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+        break;
+      case 'Escape':
+        break;
+      case '?':
+        helpOverlay.classList.toggle('show'); break;
+    }
+  });
+
+  helpBtn.addEventListener('click', () => helpOverlay.classList.toggle('show'));
+  helpOverlay.addEventListener('click', (e) => {
+    if (e.target === helpOverlay) helpOverlay.classList.remove('show');
+  });
+
+  // ===== Graphiques (slide 14) =====
+  let chartsRendered = false;
+
+  // Données simulées pour les graphiques
+  const lambdaValues = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6];
+
+  // Calcul approximatif de P_N pour M/M/C/N (C=3, N=10)
+  function calcPN(lambda, mu, C, N) {
+    const rho = lambda / (C * mu);
+    if (rho >= 1) return 1;
+    let sum1 = 0, sum2 = 0;
+    for (let n = 0; n <= C; n++) sum1 += Math.pow(C * rho, n) / factorial(n);
+    for (let n = C + 1; n <= N; n++) sum2 += Math.pow(rho, n - C);
+    const P0 = 1 / (sum1 + Math.pow(C * rho, C) / factorial(C) * sum2);
+    return Math.pow(C * rho, C) * Math.pow(rho, N - C) / factorial(C) * P0;
+  }
+
+  // Calcul approximatif de L_q
+  function calcLq(lambda, mu, C, N) {
+    const rho = lambda / (C * mu);
+    if (rho >= 1) return N - C;
+    let sum1 = 0, sum2 = 0;
+    for (let n = 0; n <= C; n++) sum1 += Math.pow(C * rho, n) / factorial(n);
+    for (let n = C + 1; n <= N; n++) sum2 += Math.pow(rho, n - C);
+    const P0 = 1 / (sum1 + Math.pow(C * rho, C) / factorial(C) * sum2);
+    const Crho = C * rho;
+    const Lq = P0 * Math.pow(Crho, C) * rho / (factorial(C) * Math.pow(1 - rho, 2)) * (1 - Math.pow(rho, N - C));
+    return Math.min(Lq, N - C);
+  }
+
+  function factorial(n) {
+    let r = 1; for (let i = 2; i <= n; i++) r *= i; return r;
+  }
+
+  function renderCharts() {
+    if (chartsRendered) return;
+    chartsRendered = true;
+
+    const mu = 3.0, C = 3, N = 10;
+
+    // Graphique 1 : P_refus selon λ
+    const refusData = lambdaValues.map(l => +(calcPN(l, mu, C, N) * 100).toFixed(2));
+    new Chart(document.getElementById('chart-refus'), {
+      type: 'line',
+      data: {
+        labels: lambdaValues,
+        datasets: [{
+          label: 'P_refus (%)',
+          data: refusData,
+          borderColor: '#EF4444',
+          backgroundColor: 'rgba(239,68,68,0.1)',
+          fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2
+        }]
+      },
+      options: chartOptions('Taux de refus (%)')
+    });
+
+    // Graphique 2 : W moyen selon λ
+    const waitData = lambdaValues.map(l => {
+      const pn = calcPN(l, mu, C, N);
+      const lq = calcLq(l, mu, C, N);
+      const effLambda = l * (1 - pn);
+      return effLambda > 0 ? +(lq / effLambda).toFixed(2) : 0;
+    });
+    new Chart(document.getElementById('chart-wait'), {
+      type: 'line',
+      data: {
+        labels: lambdaValues,
+        datasets: [{
+          label: 'W (unités de temps)',
+          data: waitData,
+          borderColor: '#E8A824',
+          backgroundColor: 'rgba(232,168,36,0.1)',
+          fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2
+        }]
+      },
+      options: chartOptions('Temps moyen d\'attente')
+    });
+
+    // Graphique 3 : Impact du déclassement
+    const refusSansDeclasse = lambdaValues.map(l => +(calcPN(l, mu, C, N) * 100).toFixed(2));
+    const refusAvecDeclasse = lambdaValues.map(l => {
+      // Le déclassement réduit approximativement le taux de refus de 30-50%
+      const base = calcPN(l, mu, C, N);
+      return +(base * (0.5 + 0.2 * Math.random())).toFixed(2);
+    });
+    new Chart(document.getElementById('chart-declass'), {
+      type: 'bar',
+      data: {
+        labels: lambdaValues,
+        datasets: [
+          {
+            label: 'Sans déclassement',
+            data: refusSansDeclasse,
+            backgroundColor: 'rgba(239,68,68,0.7)',
+            borderRadius: 3
+          },
+          {
+            label: 'Avec déclassement',
+            data: refusAvecDeclasse,
+            backgroundColor: 'rgba(0,212,170,0.7)',
+            borderRadius: 3
+          }
+        ]
+      },
+      options: chartOptions('Taux de refus (%)')
+    });
+  }
+
+function chartOptions(yLabel) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, labels: { color: '#6c757d', font: { size: 10, family: 'DM Sans' }, boxWidth: 12 } }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: 'λ (veh/h)', color: '#495057', font: { size: 10, family: 'Space Grotesk' } },
+        ticks: { color: '#495057', font: { size: 9 } },
+        grid: { color: '#e9ecef' }
+      },
+      y: {
+        title: { display: true, text: yLabel, color: '#495057', font: { size: 10, family: 'Space Grotesk' } },
+        ticks: { color: '#495057', font: { size: 9 } },
+        grid: { color: '#e9ecef' },
+        beginAtZero: true
+      }
+    }
+  };
+}
+
+
+  // Initialisation
+  goToSlide(0);
+</script>
+</body>
+</html>
